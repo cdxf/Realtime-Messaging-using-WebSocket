@@ -1,0 +1,143 @@
+#Headline
+{
+	font-size:30;
+	
+	color:black;
+	font-weight:bold;
+	font-style:italic;
+	
+}
+#Row1
+{
+	height:50px;
+	background-image:url('../images/headline_background.jpg');
+	background-size:100%;
+	background-repeat: no-repeat;
+	text-align:center;
+}
+#Row2
+{
+	padding-top:20px;
+		
+}
+#Row3
+{
+	padding-top:20px;
+	
+}
+#Row4
+{
+	padding-top:20px;
+	margin-left:220px;
+}
+#Row5
+{
+	padding-top:20px;
+	margin-left:220px;
+}
+#Row6
+{
+	padding-top:20px;
+	margin-left:220px;
+}
+#Row7
+{
+	padding-top:20px;
+	margin-left:220px;
+}
+#Row8
+{
+	padding-top:20px;
+	margin-left:220px;
+}
+body
+{
+	background-color:aqua;
+}
+#Hoten
+{
+	font-weight:bold;
+	font-size:25px;
+	margin-left:30px;
+}
+#Nghenghiep
+{
+	font-size:20px;
+	margin-left:30px;
+	color:black;
+}
+#Quoctich
+{
+	font-size:20px;
+	margin-left:30px;
+	color:black;
+}
+#Ngaysinh
+{
+	font-size:20px;
+	margin-left:35px;
+	color:black;
+}
+#Label1
+{
+	font-size:20px;
+	margin-left:30px;
+	color:gray;
+}
+
+#Label2
+{
+	font-size:20px;
+	margin-left:30px;
+	color:gray;
+}
+#Label3
+{
+	font-size:20px;
+	margin-left:30px;
+	color:gray;
+}
+#Background
+{
+	font-size:20px;
+	font-weight:bold;
+	margin-left:200px;
+	color:white;
+	background-color:black;
+}
+#Summary
+{
+	color:gray;
+	margin-left:20px;
+	font-size:20px;
+	
+}
+
+#Experience
+{
+	color:gray;
+	margin-left:20px;
+	font-size:20px;
+	
+}
+#Project
+{
+	color:gray;
+	margin-left:20px;
+	font-size:20px;
+	
+}
+#Skill
+{
+	color:gray;
+	margin-left:20px;
+	font-size:20px;
+	
+}
+#Education
+{
+	color:gray;
+	margin-left:20px;
+	font-size:20px;
+	
+}
