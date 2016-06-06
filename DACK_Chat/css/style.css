@@ -229,28 +229,3 @@ ul#menu li a:hover {
   opacity: 1;
   right: 0;
 }
-
-.contacttitle{
-  text-align:center;
-  font-size: 200%;
-  font-weight: bold;
-  margin-bottom: 20px;
-  margin-top: 50px;
-  color: green;
-}
-
-.contactfb{
-  color: blue;
-  font-weight: bold;
-  font-size: 150%; 
-}
-.contactphone{
-  color: red;
-  font-weight: bold;
-  font-size: 150%;
-}
-.contactmail{
-  color: purple;
-  font-weight: bold;
-  font-size: 150%;
-}
