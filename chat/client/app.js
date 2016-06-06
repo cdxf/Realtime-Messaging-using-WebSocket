@@ -17,34 +17,34 @@ angular.module('app', [])
                 scope.videosID = [];
                 var ontype = false;
                 var colors = [];
-                if (localStorage.getItem('hashID') == null) {
+                if (localStorage.getItem('hashID') === null) {
                     localStorage.setItem('hashID', randomhash());
                 }
                 $interval(function() {
                     if (ontype) return;
                     if (localStorage.getItem('name') != scope.name) {
-                        if (localStorage.getItem('name') != null)
+                        if (localStorage.getItem('name') !== null)
                             scope.name = localStorage.getItem('name');
                     }
                 }, 1000);
                 scope.onSound = function() {
                     scope.sound = true;
-                }
+                };
                 scope.offSound = function() {
                     scope.sound = false;
-                }
+                };
                 scope.setName = function() {
                     ontype = true;
                     localStorage.setItem('name', scope.name);
-                }
+                };
                 scope.completeName = function() {
                     ontype = false;
-                }
+                };
                 scope.startName = function() {
                     ontype = true;
-                }
+                };
                 scope.numberGuest = -1;
-                if (localStorage.getItem('name') == null)
+                if (localStorage.getItem('name') === null)
                     scope.name = "#Guest";
                 scope.numberConnection = -1;
                 scope.$watch('numberConnection', function(a, b) {
@@ -76,10 +76,10 @@ angular.module('app', [])
                 serviceEvent.$on('messages', function(e, data) {
                     html = $(".chatbox ul", element);
                     html.text("");
-                    data.messages.forEach(function(item, index) {
-                        item = item;
-                        add(item.name, item.message, item.time, item.color, item.image);
-                    });
+                    messages = data.messages;
+                    for(var k in messages){
+                      add(messages[k].name, messages[k].message, messages[k].time, messages[k].color, messages[k].image);
+                    }
                     ended = true;
                 });
                 serviceEvent.$on('message', function(e, data) {
@@ -92,7 +92,7 @@ angular.module('app', [])
                 });
                 oldSource = null;
                 serviceEvent.$on('audioStream', function(e, data) {
-                    if (oldSource != null) stopAudio(oldSource);
+                    if (oldSource !== null) stopAudio(oldSource);
                     oldSource = startAudio(audioCtx, data.data, data.time, data.length, data.sampleRate);
                 });
                 serviceEvent.$on('videoStream', function(e, data) {
@@ -118,19 +118,19 @@ angular.module('app', [])
                     }
                     capture.addEventListener('play', function() {
                         var $this = this; //cache;
-                    }, 0)
+                    }, 0);
                 });
                 scope.enter = function($event) {
                     if ($event.keyCode == 13) {
                         scope.send();
                     }
-                }
+                };
                 scope.send = function() {
                     scope.offSound();
                     if (isSending) return;
                     var imageInput = $("#picture", element);
                     var fileNumber = imageInput[0].files.length;
-                    if (scope.name == "" || (scope.message == "" && fileNumber == 0)) return;
+                    if (scope.name === "" || (scope.message === "" && fileNumber === 0)) return;
                     var time = Date.now();
                     var name = escapeHtml(scope.name);
                     var image = "";
@@ -146,7 +146,7 @@ angular.module('app', [])
                             completed = true;
                         }, false);
                     }
-                    if (colors[name] == undefined) colors[name] = getRandomColor();
+                    if (colors[name] === undefined) colors[name] = getRandomColor();
                     id = setInterval(function() {
                         if (completed) {
                             json = {
@@ -165,18 +165,18 @@ angular.module('app', [])
                         }
                     }, 50);
 
-                }
+                };
                 scrollToBottom = function() {
                     chatbox = $(".chatbox", element);
                     chatbox[0].scrollTop = chatbox[0].scrollHeight;
-                }
+                };
                 addMessage = function(message) {
                     var contents = `<li class=\"notify\">${message}</li>`;
                     html = $(".chatbox ul", element);
                     html.append(contents);
                     //html.html(html.html() + contents) ;
                     scrollToBottom();
-                }
+                };
                 add = function(name, message, time, color, image) {
                     _time = new Date();
                     _time.setTime(time);
@@ -192,7 +192,7 @@ angular.module('app', [])
                     `;
                     html = $(".chatbox ul", element);
                     html.append(contents);
-                    if (ytVidId(message) != false) {
+                    if (ytVidId(message) !== false) {
                         contents = `
                         <li>
                         <iframe class="thumbail" width="560" height="315" src="https://www.youtube.com/embed/${ytVidId(message)}" frameborder="0" allowfullscreen></iframe>
@@ -202,7 +202,7 @@ angular.module('app', [])
                     } else {
                       //  console.log(message);
                     }
-                    if (image != "" && image != undefined) {
+                    if (image !== "" && image !== undefined) {
                         contents = `<li><img class="thumbail" src="${image}"/></li>`;
                         html.append(contents);
                     }
@@ -214,7 +214,7 @@ angular.module('app', [])
                 camera(scope, element, chatService);
                 audioRecord(scope, chatService);
             }
-        }
+        };
     }])
     .service('chatService', function($interval, $rootScope) {
         var scope = this.scope = $rootScope.$new(true);
@@ -270,13 +270,13 @@ angular.module('app', [])
         });
         this.sendMessage = function(json) {
             conn.emit("message", json);
-        }
+        };
         this.sendVideoStream = function(json) {
             conn.emit("videoStream", json);
-        }
+        };
         this.sendAudioStream = function(json) {
             conn.emit("audioStream", json);
-        }
+        };
     });
 
 function audioRecord(scope, service) {
@@ -319,7 +319,7 @@ function audioRecord(scope, service) {
                   'data': buffer.buffer,
                   'time': audioCtx.currentTime,
                   'sampleRate': inputBuffer.sampleRate
-              }
+              };
               c = 0;
               service.sendAudioStream(json);
           }
@@ -333,10 +333,10 @@ function audioRecord(scope, service) {
       source.connect(gain);
       gain.connect(processor);
       processor.connect(dest);
-    }
+    };
     onError = function(err){
       console.log(err.name);
-    }
+    };
     if(NEW_API){
       navigator.mediaDevices.getUserMedia(constraints)
           .then(onStream)
@@ -353,7 +353,7 @@ function camera(scope, element, service) {
     var options = {
         videoBitsPerSecond: 200000,
         mimeType: 'video/webm',
-    }
+    };
     var constraints = {
         video: {
             mandatory: {
@@ -361,7 +361,7 @@ function camera(scope, element, service) {
                 maxHeight: 200
             }
         }
-    }
+    };
     onStream = function(mediaStream) {
         scope.hasCamera = true;
         chunk = [];
@@ -369,7 +369,7 @@ function camera(scope, element, service) {
         mediaRecorder.start();
         mediaRecorder.ondataavailable = function(e) {
             chunk.push(e.data);
-        }
+        };
         var record = function() {
             var blob = new Blob(chunk, {
                 type: 'video/webm'
@@ -386,12 +386,12 @@ function camera(scope, element, service) {
                     ratio: camera.videoWidth / camera.videoHeight
                 };
                 service.sendVideoStream(json);
-            }
+            };
             reader.readAsArrayBuffer(blob);
             mediaRecorder.stop();
             chunk = [];
             mediaRecorder.start();
-        }
+        };
         setInterval(function() {
             record();
         }, 500);
@@ -399,17 +399,17 @@ function camera(scope, element, service) {
         camera.onloadedmetadata = function(e) {
             camera.play();
         };
-    }
+    };
     onError = function(err) {
         scope.hasCamera = false;
         console.log("Camera Error" + err.name);
-    }
+    };
     if (NEW_API) {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(onStream)
-            .catch(onError)
+            .catch(onError);
     } else {
-      navigator.getUserMedia(constraints, onStream, onError)
+      navigator.getUserMedia(constraints, onStream, onError);
     }
 }
 

@@ -1,0 +1,43 @@
+<nav class="navbar navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="index.html">p2qChat</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav">
+                <li ng-class="active === 'home' ? 'active':''" ng-click="active = 'home'">
+                    <a class="glyphicon glyphicon-home" href="index.html">
+                        Home</a>
+                </li>
+                <li ng-class="active === 'chat' ? 'active':''" ng-click="active = 'chat'">
+                    <a ui-sref="room">List Chatroom</a>
+                </li>
+                <li ng-class="active === 'user' ? 'active':''" ng-click="active = 'user'">
+                    <a ui-sref="user">List User Online</a>
+                </li>
+                <li ng-class="active === 'contact' ? 'active':''" ng-click="active = 'contact'">
+                    <a ui-sref="contact">Contact</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li ng-hide="isLogged" ng-click="login()">
+                  <a href="#">
+                      <span class="glyphicon glyphicon-log-in"></span>
+                      Login</a>
+              </li>
+              <li ng-show="isLogged" ng-click="">
+                  <img ng-src="{{avatar}}" class="avatar img-thumbnail"/>
+              </li>
+                <li ng-show="isLogged" ng-click="">
+                    <a href="#">
+                        {{username}}</a>
+                </li>
+                <li ng-show="isLogged" ng-click="logout()">
+                    <a href="#">
+                        <span class="glyphicon glyphicon-log-out"></span>
+                        Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

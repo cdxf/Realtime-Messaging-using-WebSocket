@@ -1,8 +1,25 @@
 var isHTTPS = false;
-var hashIDStorage = {};
-var messages = [];
+//var hashIDStorage = {};
+var users = {};
+var messages = {};
+var rooms = {};
 var io = null;
 var app = null;
+var firebase = require("firebase");
+firebase.initializeApp({
+    databaseURL: "https://ptudwhcmus.firebaseio.com",
+    serviceAccount: "PTUDWHCMUS-33f7faf8ae71.json"
+});
+var db = firebase.database();
+var ref = db.ref('messages');
+var rooms = db.ref('rooms');
+var getMessage = function(snapshot) {
+    temp = snapshot.val();
+    if (temp !== null) {
+        messages = temp;
+    }
+};
+ref.on('value', getMessage);
 if (isHTTPS === true) {
     var https = require('https');
     var fs = require('fs');
@@ -19,6 +36,16 @@ if (isHTTPS === true) {
 }
 videoFilter = [];
 io.on('connection', function(socket) {
+    socket.on('login', function(data) {
+        token = data.token;
+        auth = firebase.auth();
+        auth.verifyIdToken(token).then(function(decodedToken) {
+            var uid = decodedToken.sub;
+        });
+    })
+    socket.on('createRoom', function(data) {
+
+    });
     socket.on('hashID', function(hashID) {
         console.log("Hash ID " + hashID);
         socket.hashID = hashID;
@@ -56,10 +83,8 @@ io.on('connection', function(socket) {
     });
 
     socket.on('message', function(data) {
-        messages.push(data);
-        if (messages.length > 100) {
-            messages.shift();
-        }
+        //  messages.push(data);
+        ref.push(data);
         io.emit('message', data);
     });
     socket.on('disconnect', function(data) {
