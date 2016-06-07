@@ -1,11 +1,12 @@
 var isHTTPS = false;
-//var hashIDStorage = {};
+var hashIDStorage = {};
 var users = {};
 var messages = {};
 var rooms = {};
 var io = null;
 var app = null;
 var firebase = require("firebase");
+var ColorHash = require('color-hash');
 firebase.initializeApp({
     databaseURL: "https://ptudwhcmus.firebaseio.com",
     serviceAccount: "PTUDWHCMUS-33f7faf8ae71.json"
@@ -35,15 +36,51 @@ if (isHTTPS === true) {
     io = require('socket.io')(8080);
 }
 videoFilter = [];
+authData = function(data, onResult) {
+    token = data.token;
+  //  console.log(data);
+    auth = firebase.auth();
+    auth.verifyIdToken(token).then(function(decodedToken) {
+        var uid = decodedToken.sub;
+        console.log(decodedToken);
+        onResult(decodedToken);
+    }).catch(function(err) {
+        console.log(err);
+        onResult(false);
+    });
+}
 io.on('connection', function(socket) {
     socket.on('login', function(data) {
-        token = data.token;
-        auth = firebase.auth();
-        auth.verifyIdToken(token).then(function(decodedToken) {
-            var uid = decodedToken.sub;
-        });
+        authData(data, function(result) {
+            if (result !== false) {
+                socket.user = data;
+                console.log("Login " + socket);
+            } else {}
+        })
     })
+    socket.on('getRoom', function() {
+        var getRoom = function(snapshot) {
+            roomData = snapshot.val();
+            if (roomData !== null) {
+                socket.emit("getRoom", roomData);
+            }
+        };
+        rooms.on('value', getRoom);
+    });
     socket.on('createRoom', function(data) {
+        var title = data.title;
+        var author = data.author;
+        json = {
+            title: title,
+            author: author,
+            messages_count: 0
+        }
+        authData(data, function(result) {
+            if (result !== false) {
+                rooms.push(json);
+                console.log("Room created");
+            } else {}
+        })
 
     });
     socket.on('hashID', function(hashID) {
@@ -61,6 +98,9 @@ io.on('connection', function(socket) {
         }
         count = Object.keys(hashIDStorage).length;
         socket.emit('numberGuest', count);
+        //socket.emit('messages', messages);
+    });
+    socket.on('requestMessages', function(data) {
         socket.emit('messages', messages);
     });
     socket.on('numberGuest', function(data) {
@@ -83,8 +123,19 @@ io.on('connection', function(socket) {
     });
 
     socket.on('message', function(data) {
+        roomNode = ref.child(data.room);
+        roomMeta = rooms.child(data.room);
         //  messages.push(data);
-        ref.push(data);
+        console.log(socket.name);
+        if (socket.user === undefined) return;
+        data.name = socket.user.displayName;
+        colorHash = new ColorHash();
+        data.color = colorHash.hex(socket.user.uid);
+        roomNode.push(data);
+        roomMeta.once('value',function(data){
+          messages_count = data.val().messages_count;
+          roomMeta.update({messages_count: messages_count+1});
+        })
         io.emit('message', data);
     });
     socket.on('disconnect', function(data) {

@@ -1,0 +1,44 @@
+<table class="controls" ng-keypress="enter($event)" tabindex="1">
+    <tr>
+        <td colspan="3">
+            <div class="chatbox" id="chatbox">
+                <ul>
+                    Getting data, just wait for a while ...
+                </ul>
+            </div>
+          </td>
+    </tr>
+    <tr>
+        <td width="70%">
+            <input type="text" class="messageInput" ng-model="message" placeholder="Enter your message..." />
+        </td>
+        <td width="20%" colspan="1">
+            <input type="file" value="" ng-model="image" name="pic" id="picture" accept="image/*">
+        </td>
+        <td width="5%">
+            <input type="submit" ng-click="send()" value=">" />
+        </td>
+    </tr>
+    <tr>
+        <td class="cncount">Current Users: {{numberGuest}}</td>
+    </tr>
+</table>
+
+<audio id="notifysound">
+    <source src="sound.ogg" type="audio/ogg"> Your browser does not support the audio element.
+</audio>
+<div class="videoBorder">
+  <div class="clientVideo own" ng-show="hasCamera">
+    <video volume="0" class="videoContainer" height="200" width="200px" id="mycamera" autoplay="autoplay" style=""></video>
+    <div class="btn videoPauseBtn"></div>
+    <div class="btn muteBtn"></div>
+  </div>
+    <div class="clientVideo" ng-repeat="id in videosID">
+        <div class="videoContainer">
+            <canvas class="cameraCanvas" ng-attr-id="{{'canvas_'+id}}"></canvas>
+            <video class="videoCanvas"ng-attr-id="{{'video_'+id}}" style=""></video>
+            <div class="btn"></div>
+        </div>
+    </div>
+    <div class="clear"></div>
+</div>

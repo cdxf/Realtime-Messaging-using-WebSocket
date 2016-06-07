@@ -1,16 +1,52 @@
 angular.module('app', ['ui.router'])
+.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+    $urlRouterProvider.otherwise('');
+    $stateProvider
+        .state('index', {
+            url: '',
+            templateUrl: 'template/index.html',
+            controller: 'myCtrl'
+        })
+        .state('room', {
+            url: '/room',
+            templateUrl: 'template/room.html',
+            controller: 'myCtrl'
+        })
+        .state('roomchat', {
+            url: '/roomchat/:id',
+            templateUrl: 'template/chat.html',
+            controller: ''
+        })
+        .state('contact', {
+            url: '/contact',
+            templateUrl: 'template/contact.html',
+            controller: ''
+        })
+        .state('chat', {
+            url: '/chat',
+            templateUrl: 'template/chat.html',
+            controller: ''
+        })
+        .state('user', {
+            url: '/user',
+            templateUrl: 'template/user.html',
+            controller: ''
+        });
+}])
     .controller('MainCtrl', ['$scope', 'chatService', function($scope, chatService) {}])
-    .directive('chat', ['$interval', 'chatService', function($interval, chatService) {
+    .directive('chat', ['$interval','$stateParams', 'chatService', function($interval,$stateParams, chatService) {
         return {
             restrict: 'E',
             scope: {
                 api: '=',
             },
-            templateUrl: 'template/chat.html',
+            templateUrl: 'template/chatDirective.html',
             link: function(scope, element, attrs) {
+                console.log("Linked");
+                var room = $stateParams.id;
                 serviceEvent = chatService.scope;
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
-                var audioCtx = new AudioContext();
+
                 var isSending = false;
                 scope.name = scope.message = "";
                 scope.sound = false;
@@ -77,12 +113,16 @@ angular.module('app', ['ui.router'])
                     html = $(".chatbox ul", element);
                     html.text("");
                     messages = data.messages;
-                    for(var k in messages){
-                      add(messages[k].name, messages[k].message, messages[k].time, messages[k].color, messages[k].image);
+                    for(var roomID in messages){
+                      if(roomID !== room) continue;
+                      for(k in messages[roomID])
+                      add(messages[roomID][k].name, messages[roomID][k].message, messages[roomID][k].time, messages[roomID][k].color, messages[roomID][k].image);
                     }
                     ended = true;
                 });
+                chatService.requestMessages();
                 serviceEvent.$on('message', function(e, data) {
+                    if(data.room != room) return;
                     if (ended && scope.sound) {
                         $("#notifysound", element)[0].volume = 0.5;
                         $("#notifysound", element)[0].play();
@@ -151,6 +191,7 @@ angular.module('app', ['ui.router'])
                         if (completed) {
                             json = {
                                 name: name,
+                                room: room,
                                 message: escapeHtml(scope.message),
                                 time: time,
                                 color: colors[name],
@@ -211,6 +252,7 @@ angular.module('app', ['ui.router'])
                 };
                 //Send camera here
                 //Handle Camera
+                console.log(camera);
                 camera(scope, element, chatService);
                 audioRecord(scope, chatService);
             }
@@ -219,6 +261,8 @@ angular.module('app', ['ui.router'])
     .service('chatService', function($interval, $rootScope) {
         var scope = this.scope = $rootScope.$new(true);
         var conn = io(SOCKET_URL);
+        this.user = "";
+        this.rooms = {};
         //var conn = new WebSocket('wss://huynhquang.xyz/wss2/NNN');
         //var conn = new WebSocket('ws://localhost:8080');
         var ended = false;
@@ -277,6 +321,22 @@ angular.module('app', ['ui.router'])
         this.sendAudioStream = function(json) {
             conn.emit("audioStream", json);
         };
+        this.login = function(data){
+          this.user = data;
+          conn.emit("login", data);
+        }
+        this.createRoom = function(data){
+          conn.emit("createRoom", data);
+        }
+        this.requestMessages = function(){
+          conn.emit("requestMessages");
+        }
+        this.getRoom = function(onResult){
+          conn.emit("getRoom");
+          conn.on('getRoom', function(data) {
+              onResult(data);
+          });
+        }
     });
 
 function audioRecord(scope, service) {
@@ -348,8 +408,8 @@ function audioRecord(scope, service) {
 }
 
 function camera(scope, element, service) {
-    camera = $("#mycamera", element).get(0);
-    camera.volume = 0;
+    cameraElem = $("#mycamera", element).get(0);
+    cameraElem.volume = 0;
     var options = {
         videoBitsPerSecond: 200000,
         mimeType: 'video/webm',
@@ -395,9 +455,9 @@ function camera(scope, element, service) {
         setInterval(function() {
             record();
         }, 500);
-        camera.src = window.URL.createObjectURL(mediaStream);
-        camera.onloadedmetadata = function(e) {
-            camera.play();
+        cameraElem.src = window.URL.createObjectURL(mediaStream);
+        cameraElem.onloadedmetadata = function(e) {
+            cameraElem.play();
         };
     };
     onError = function(err) {
@@ -412,95 +472,3 @@ function camera(scope, element, service) {
       navigator.getUserMedia(constraints, onStream, onError);
     }
 }
-// 
-// function getRandomColor() {
-//     var letters = '0123456789ABCDEF'.split('');
-//     var color = '#';
-//     for (var i = 0; i < 6; i++) {
-//         color += letters[Math.floor(Math.random() * 16)];
-//     }
-//     return color;
-// }
-// var entityMap = {
-//     "<": "&lt;",
-//     ">": "&gt;",
-//     '"': '&quot;',
-//     "'": '&#39;',
-// };
-//
-// function ytVidId(url) {
-//     var p = /^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
-//     return (url.match(p)) ? RegExp.$1 : false;
-// }
-//
-// function escapeHtml(string) {
-//     return String(string).replace(/[<>"']/g, function(s) {
-//         return entityMap[s];
-//     });
-// }
-//
-// function randomhash() {
-//     return window.btoa(Math.random()).replace(/=/g, '');
-// }
-//
-// function getBrowser() {
-//
-//     var nVer = navigator.appVersion;
-//     var nAgt = navigator.userAgent;
-//     var browserName = navigator.appName;
-//     var fullVersion = '' + parseFloat(navigator.appVersion);
-//     var majorVersion = parseInt(navigator.appVersion, 10);
-//     var nameOffset, verOffset, ix;
-//
-//     // In Opera, the true version is after "Opera" or after "Version"
-//     if ((verOffset = nAgt.indexOf("Opera")) != -1) {
-//         browserName = "Opera";
-//         fullVersion = nAgt.substring(verOffset + 6);
-//         if ((verOffset = nAgt.indexOf("Version")) != -1)
-//             fullVersion = nAgt.substring(verOffset + 8);
-//     }
-//     // In MSIE, the true version is after "MSIE" in userAgent
-//     else if ((verOffset = nAgt.indexOf("MSIE")) != -1) {
-//         browserName = "Microsoft Internet Explorer";
-//         fullVersion = nAgt.substring(verOffset + 5);
-//     }
-//     // In Chrome, the true version is after "Chrome"
-//     else if ((verOffset = nAgt.indexOf("Chrome")) != -1) {
-//         browserName = "Chrome";
-//         fullVersion = nAgt.substring(verOffset + 7);
-//     }
-//     // In Safari, the true version is after "Safari" or after "Version"
-//     else if ((verOffset = nAgt.indexOf("Safari")) != -1) {
-//         browserName = "Safari";
-//         fullVersion = nAgt.substring(verOffset + 7);
-//         if ((verOffset = nAgt.indexOf("Version")) != -1)
-//             fullVersion = nAgt.substring(verOffset + 8);
-//     }
-//     // In Firefox, the true version is after "Firefox"
-//     else if ((verOffset = nAgt.indexOf("Firefox")) != -1) {
-//         browserName = "Firefox";
-//         fullVersion = nAgt.substring(verOffset + 8);
-//     }
-//     // In most other browsers, "name/version" is at the end of userAgent
-//     else if ((nameOffset = nAgt.lastIndexOf(' ') + 1) <
-//         (verOffset = nAgt.lastIndexOf('/'))) {
-//         browserName = nAgt.substring(nameOffset, verOffset);
-//         fullVersion = nAgt.substring(verOffset + 1);
-//         if (browserName.toLowerCase() == browserName.toUpperCase()) {
-//             browserName = navigator.appName;
-//         }
-//     }
-//     // trim the fullVersion string at semicolon/space if present
-//     if ((ix = fullVersion.indexOf(";")) != -1)
-//         fullVersion = fullVersion.substring(0, ix);
-//     if ((ix = fullVersion.indexOf(" ")) != -1)
-//         fullVersion = fullVersion.substring(0, ix);
-//
-//     majorVersion = parseInt('' + fullVersion, 10);
-//     if (isNaN(majorVersion)) {
-//         fullVersion = '' + parseFloat(navigator.appVersion);
-//         majorVersion = parseInt(navigator.appVersion, 10);
-//     }
-//     return browserName;
-//
-// }

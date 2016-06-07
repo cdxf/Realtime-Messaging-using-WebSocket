@@ -1,53 +1,41 @@
 var app = angular.module('app')
-    .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
-        $urlRouterProvider.otherwise('');
-
-        $stateProvider
-            .state('index', {
-                url: '',
-                templateUrl: 'template/index.html',
-                controller: 'myCtrl'
-            })
-            .state('room', {
-                url: '/room',
-                templateUrl: 'template/room.html',
-                controller: ''
-            })
-            .state('contact', {
-                url: '/contact',
-                templateUrl: 'template/contact.html',
-                controller: ''
-            })
-            .state('user', {
-                url: '/user',
-                templateUrl: 'template/user.html',
-                controller: ''
-            });
-    }])
-    .controller('myCtrl', ['$scope','chatService',function($scope,chatService) {
+    .controller('myCtrl', ['$scope','$state','chatService',function($scope,$stateParams,chatService) {
         $scope.newroom = function() {
             $scope.showform = !$scope.showform;
         };
+        chatService.getRoom(function(r){
+          $scope.rooms = r;
+          for(var key in r){
+            r[key].key = key;
+          }
+          console.log(r);
+        })
         $scope.saveroom = function() {
+            console.log($scope);
             $scope.showform = !$scope.showform;
+            console.log(chatService.user);
+            json = {
+              title: $scope.title,
+              author: chatService.user,
+              token: chatService.user.token
+            }
+            chatService.createRoom(json);
         };
     }])
-    .directive('customnav', function(fire) {
+    .directive('customnav', function(fire,$state) {
         return {
             templateUrl: 'template/navbar.html',
             scope: {
-                active: '@active'
             },
 
             link: function(scope, element, attrs) {
-                console.log(scope.active);
+                //scope.active = $state.current.name;
+                console.log($state.current);
                 scope.hightlight = function(e) {
-                    console.log("ok0");
                     console.log(e);
                 };
                 scope.isLogged = fire.isLogged();
                 fire.scope.$on('authChanged', function(e, data) {
-                  console.log(data);
                     scope.isLogged = fire.isLogged();
                     if (data !== undefined) {
 
@@ -70,7 +58,7 @@ var app = angular.module('app')
             }
         };
     })
-    .factory('fire', function($rootScope) {
+    .factory('fire', ['$rootScope','chatService',function($rootScope,chatService) {
         var isLogged = false;
         var scopes = $rootScope.$new(true);
         var userData = null;
@@ -86,7 +74,10 @@ var app = angular.module('app')
             if (user) {
               userData = user.providerData[0];
               user.getToken().then(function(token){
+                  isLogged = true;
                   userData.token = token;
+                  console.log("logging");
+                  chatService.login(userData);
                   scopes.$emit('authChanged', userData);
               });
 
@@ -132,4 +123,4 @@ var app = angular.module('app')
                 firebase.auth().signOut().then(logoutHandler, errorHandler);
             }
         };
-    });
+    }]);

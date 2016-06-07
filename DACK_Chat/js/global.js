@@ -7,6 +7,7 @@ if(!NEW_API){
       audio: true,
       video: true
   };
+  var audioCtx = new AudioContext(); 
 // navigator.getUserMedia(constraints, function(e){}, function(e){
 // });
 }

@@ -5,17 +5,17 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-                <li ng-class="active === 'home' ? 'active':''" ng-click="active = 'home'">
-                    <a class="glyphicon glyphicon-home" href="index.html">
+                <li ui-sref-active="active">
+                    <a class="glyphicon glyphicon-home" ui-sref="index">
                         Home</a>
                 </li>
-                <li ng-class="active === 'chat' ? 'active':''" ng-click="active = 'chat'">
+                <li ui-sref-active="active">
                     <a ui-sref="room">List Chatroom</a>
                 </li>
-                <li ng-class="active === 'user' ? 'active':''" ng-click="active = 'user'">
+                <li ui-sref-active="active">
                     <a ui-sref="user">List User Online</a>
                 </li>
-                <li ng-class="active === 'contact' ? 'active':''" ng-click="active = 'contact'">
+                <li ui-sref-active="active">
                     <a ui-sref="contact">Contact</a>
                 </li>
             </ul>
