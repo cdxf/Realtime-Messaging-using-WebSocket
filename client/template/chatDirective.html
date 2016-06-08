@@ -6,26 +6,22 @@
                     Getting data, just wait for a while ...
                 </ul>
             </div>
-            <td>
+          </td>
     </tr>
-    <tr>
-        <td width="30%">
-            <input type="text" class="nameInput" ng-focus="startName()" ng-blur="completeName()" ng-keyup="setName()" ng-model="name" placeholder="Enter your name..." />
-        </td>
-        <td width="65%">
+    <tr ng-show="isLogged">
+        <td width="70%">
             <input type="text" class="messageInput" ng-model="message" placeholder="Enter your message..." />
+        </td>
+        <td width="20%" colspan="1">
+            <input type="file" value="" ng-model="image" name="pic" id="picture" accept="image/*">
         </td>
         <td width="5%">
             <input type="submit" ng-click="send()" value=">" />
         </td>
     </tr>
     <tr>
-        <td>
-            <input type="file" ng-model="image" name="pic" id="picture" accept="image/*">
-        </td>
-    </tr>
-    <tr>
-        <td class="cncount">Current Users: {{numberGuest}}</td>
+      <td></td>
+        <!-- <td class="cncount">Current Users: {{numberGuest}} {{isLogged}}</td> -->
     </tr>
 </table>
 

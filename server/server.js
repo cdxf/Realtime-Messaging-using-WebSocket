@@ -14,13 +14,6 @@ firebase.initializeApp({
 var db = firebase.database();
 var ref = db.ref('messages');
 var rooms = db.ref('rooms');
-var getMessage = function(snapshot) {
-    temp = snapshot.val();
-    if (temp !== null) {
-        messages = temp;
-    }
-};
-ref.on('value', getMessage);
 if (isHTTPS === true) {
     var https = require('https');
     var fs = require('fs');
@@ -42,7 +35,7 @@ authData = function(data, onResult) {
     auth = firebase.auth();
     auth.verifyIdToken(token).then(function(decodedToken) {
         var uid = decodedToken.sub;
-        console.log(decodedToken);
+        //console.log(decodedToken);
         onResult(decodedToken);
     }).catch(function(err) {
         console.log(err);
@@ -54,7 +47,7 @@ io.on('connection', function(socket) {
         authData(data, function(result) {
             if (result !== false) {
                 socket.user = data;
-                console.log("Login " + socket);
+                //console.log("Login " + socket);
             } else {}
         })
     })
@@ -100,8 +93,16 @@ io.on('connection', function(socket) {
         socket.emit('numberGuest', count);
         //socket.emit('messages', messages);
     });
-    socket.on('requestMessages', function(data) {
-        socket.emit('messages', messages);
+    socket.on('requestMessages', function(room) {
+      var getMessage = function(snapshot) {
+          temp = snapshot.val();
+          if (temp !== null) {
+              socket.emit('messages', temp);
+          }else{
+            socket.emit('messages',{});
+          }
+      };
+      ref.child(room).once('value', getMessage);
     });
     socket.on('numberGuest', function(data) {
 
@@ -113,12 +114,16 @@ io.on('connection', function(socket) {
     });
 
     socket.on('audioStream', function(data) {
+      //if (socket.user === undefined) return;
+      data.name = socket.user.displayName;
         if (videoFilter[socket.hashID] == socket) {
             socket.broadcast.emit('audioStream', data);
         }
     });
 
     socket.on('videoInfo', function(data) {
+      if (socket.user === undefined) return;
+      data.name = socket.user.displayName;
         socket.broadcast.emit('videoInfo', data);
     });
 
@@ -126,7 +131,7 @@ io.on('connection', function(socket) {
         roomNode = ref.child(data.room);
         roomMeta = rooms.child(data.room);
         //  messages.push(data);
-        console.log(socket.name);
+        //console.log(socket.name);
         if (socket.user === undefined) return;
         data.name = socket.user.displayName;
         colorHash = new ColorHash();

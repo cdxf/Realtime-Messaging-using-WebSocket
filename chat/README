@@ -1,9 +1,0 @@
-1. Cấu hình
-+ Chạy trên localhost với HTTP: (mặc định trong source, không cần sửa)
-	- client/global.js -> Đổi biến SOCKET_URL.
-	- server/server.js -> Đổi isHTTPS thành false
-+ Chạy trên server với HTTPS:
-	- Tương tự
-	- Đổi các file trong biến options tương ứng với key.
-2. Chạy
-+ Vào cmd gõ node server.js để deploy server.

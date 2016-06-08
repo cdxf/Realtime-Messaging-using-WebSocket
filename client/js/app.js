@@ -8,7 +8,7 @@ var app = angular.module('app')
           for(var key in r){
             r[key].key = key;
           }
-          console.log(r);
+          $scope.$apply();
         })
         $scope.saveroom = function() {
             console.log($scope);
@@ -38,7 +38,7 @@ var app = angular.module('app')
                 fire.scope.$on('authChanged', function(e, data) {
                     scope.isLogged = fire.isLogged();
                     if (data !== undefined) {
-
+                        scope.isLogged = fire.isLogged();
                         scope.username = data.displayName;
                         scope.avatar = data.photoURL;
                         scope.$apply();
