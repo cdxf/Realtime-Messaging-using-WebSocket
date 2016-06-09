@@ -1,10 +1,12 @@
 var isHTTPS = false;
-var hashIDStorage = {};
 var users = {};
 var messages = {};
 var rooms = {};
 var io = null;
 var app = null;
+var onlineUsers = {};
+var requestMedia = [];
+var currentStream = [];
 var firebase = require("firebase");
 var ColorHash = require('color-hash');
 firebase.initializeApp({
@@ -31,7 +33,7 @@ if (isHTTPS === true) {
 videoFilter = [];
 authData = function(data, onResult) {
     token = data.token;
-  //  console.log(data);
+    //  console.log(data);
     auth = firebase.auth();
     auth.verifyIdToken(token).then(function(decodedToken) {
         var uid = decodedToken.sub;
@@ -47,9 +49,21 @@ io.on('connection', function(socket) {
         authData(data, function(result) {
             if (result !== false) {
                 socket.user = data;
+                uid = socket.user.uid;
+                if (uid in onlineUsers) {
+                    onlineUsers[uid].count++;
+                } else {
+                    console.log("Them");
+                    onlineUsers[uid] = {
+                        user: data,
+                        count: 1
+                    }
+                    console.log(onlineUsers);
+                }
                 //console.log("Login " + socket);
+                socket.emit("loginSuccess");
             } else {}
-        })
+        });
     })
     socket.on('getRoom', function() {
         var getRoom = function(snapshot) {
@@ -60,6 +74,14 @@ io.on('connection', function(socket) {
         };
         rooms.on('value', getRoom);
     });
+    socket.on('getRoomName', function(room) {
+        var getRoomName = function(snapshot) {
+            roomData = snapshot.val();
+            socket.emit("getRoomName", roomData.title);
+        };
+        rooms.child(room).once('value', getRoomName);
+    });
+
     socket.on('createRoom', function(data) {
         var title = data.title;
         var author = data.author;
@@ -76,57 +98,67 @@ io.on('connection', function(socket) {
         })
 
     });
-    socket.on('hashID', function(hashID) {
-        console.log("Hash ID " + hashID);
-        socket.hashID = hashID;
-        if (videoFilter[hashID] === undefined) {
-            videoFilter[hashID] = socket;
-            console.log("Added " + hashID);
-        }
-        if (hashIDStorage[hashID] !== undefined) {
-            hashIDStorage[hashID]++;
-        } else {
-            hashIDStorage[hashID] = 1;
-            socket.broadcast.emit('newClient');
-        }
-        count = Object.keys(hashIDStorage).length;
-        socket.emit('numberGuest', count);
-        //socket.emit('messages', messages);
+    socket.on('requestOnlineUsers', function() {
+        console.log(onlineUsers);
+        socket.emit('OnlineUsers', onlineUsers);
+    });
+    socket.on('requestMedia', function(room) {
+        if (!(room in requestMedia))
+            requestMedia[room] = [];
+        requestMedia[room].push(socket);
+    });
+    socket.on('requestMediaRecord', function() {
+      // this user is not login
+      if(socket.user === undefined){
+         return;
+       }
+      // this user is not recording
+      if (currentStream[socket.user.uid] === undefined) {
+          socket.emit("mediaRecordAccept");
+          currentStream[socket.user.uid] = socket;
+      }
+    });
+    socket.on('closeMedia', function(room) {
+        if (socket.user !== undefined && currentStream[socket.user.uid] === socket ){
+            delete currentStream[socket.user.uid];
+            console.log('emit stream end');
+            socket.broadcast.emit('videoStreamEnd', socket.user.uid);
+            }
+        socketIndex = requestMedia[room].indexOf(socket);
+        if (socketIndex != -1)
+            requestMedia[room].splice(socketIndex, 1);
     });
     socket.on('requestMessages', function(room) {
-      var getMessage = function(snapshot) {
-          temp = snapshot.val();
-          if (temp !== null) {
-              socket.emit('messages', temp);
-          }else{
-            socket.emit('messages',{});
-          }
-      };
-      ref.child(room).once('value', getMessage);
-    });
-    socket.on('numberGuest', function(data) {
-
+        var getMessage = function(snapshot) {
+            temp = snapshot.val();
+            if (temp !== null) {
+                socket.emit('messages', temp);
+            } else {
+                socket.emit('messages', {});
+            }
+        };
+        ref.child(room).once('value', getMessage);
     });
     socket.on('videoStream', function(data) {
-        if (videoFilter[socket.hashID] == socket) {
-            socket.broadcast.emit('videoStream', data);
-        }
+        //socket.broadcast.emit('videoStream', data);
+        room = data.room;
+        if (requestMedia[room] === undefined) return;
+        requestMedia[room].forEach(function(e, i, a) {
+            if (e !== socket)
+                e.emit('videoStream', data);
+        });
+        // socket.broadcast.emit('videoStream', data);
     });
 
     socket.on('audioStream', function(data) {
-      //if (socket.user === undefined) return;
-      data.name = socket.user.displayName;
-        if (videoFilter[socket.hashID] == socket) {
-            socket.broadcast.emit('audioStream', data);
-        }
+        //if (socket.user === undefined) return;
+        room = data.room;
+        if (requestMedia[room] === undefined) return;
+        requestMedia[room].forEach(function(e, i, a) {
+            if (e !== socket)
+                e.emit('audioStream', data);
+        });
     });
-
-    socket.on('videoInfo', function(data) {
-      if (socket.user === undefined) return;
-      data.name = socket.user.displayName;
-        socket.broadcast.emit('videoInfo', data);
-    });
-
     socket.on('message', function(data) {
         roomNode = ref.child(data.room);
         roomMeta = rooms.child(data.room);
@@ -134,28 +166,36 @@ io.on('connection', function(socket) {
         //console.log(socket.name);
         if (socket.user === undefined) return;
         data.name = socket.user.displayName;
+        data.photoURL = socket.user.photoURL;
         colorHash = new ColorHash();
         data.color = colorHash.hex(socket.user.uid);
         roomNode.push(data);
-        roomMeta.once('value',function(data){
-          messages_count = data.val().messages_count;
-          roomMeta.update({messages_count: messages_count+1});
-        })
+        roomMeta.once('value', function(data) {
+            messages_count = data.val().messages_count;
+            roomMeta.update({
+                messages_count: messages_count + 1
+            });
+        });
         io.emit('message', data);
     });
     socket.on('disconnect', function(data) {
+        requestMedia.forEach(function(e, i, a) {
+            //e = room;
+            socketIndex = e.indexOf(socket);
+            if (socketIndex != -1)
+                e.splice(socketIndex, 1);
+        })
+        if (socket.user !== undefined && socket.user.uid in onlineUsers) {
+          if (currentStream[socket.user.uid] === socket){
+              delete currentStream[socket.user.uid];
+              socket.broadcast.emit('videoStreamEnd', socket.user.uid);
+          }
+            onlineUsers[socket.user.uid].count--;
+            if (onlineUsers[socket.user.uid].count === 0) {
+                delete onlineUsers[socket.user.uid];
+            }
+      }
         console.log("Disconnect");
-        hashID = socket.hashID;
-        delete videoFilter[hashID];
         console.log("A client has disconnect");
-        hashIDStorage[hashID]--;
-        if (hashIDStorage[socket.hashID] === 0) {
-            delete hashIDStorage[hashID];
-        }
-        if (hashIDStorage[hashID] === undefined) {
-            io.emit('closedClient', {
-                'hashID': hashID
-            });
-        }
     });
 });

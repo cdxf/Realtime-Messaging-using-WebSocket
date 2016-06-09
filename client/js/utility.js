@@ -1,4 +1,3 @@
-
 startAudio = function(audioCtx,arraybuffer, time,length ,sampleRate) {
     var audioBuffer = audioCtx.createBuffer(1, length, sampleRate);
     var typedbuffer = new Float32Array(arraybuffer);

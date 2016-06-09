@@ -3,6 +3,7 @@ body {
 }
 .containerall {
     align: center;
+    background-color: #f6f6ee;
 }
 .containerbody {
     margin: 0px auto;
@@ -12,6 +13,14 @@ body {
 }
 .navbar-nav .avatar{
   padding: 0px;
+  width: 30px;
+  height: 30px;
+  margin-top:10px;
+}
+a{
+}
+a:hover{
+  color:black;
 }
 .header, .navbar-inverse {
     background-color: #222;
@@ -65,27 +74,33 @@ ul#menu li a {
 ul#menu li a:hover {
     background-color: black;
 }
-.boderline {
-  margin: 10px;
-    padding-bottom: 50px;
+.borderline {
+    /*padding-bottom: 50px;*/
     -webkit-box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.75);
     -moz-box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.75);
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.75);
 }
-.headertable {
-    background-color: #222;
+.headertable  {
+    background-color: #4CAF50;
     color: white;
     padding: 10px 10px 10px 10px;
-    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+.headertable a{
+  color: white;
+}
+.headertable a:hover{
+  color: white;
 }
 #tablecustom {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
-    width: 96%;
+    width: 100%;
     align: center;
+    border-bottom: 1px solid #e6e6e6;
 }
 #tablecustom td, #tablecustom th {
-    border: 2px solid #ddd;
     text-align: left;
     padding: 8px;
 }
@@ -98,7 +113,7 @@ ul#menu li a:hover {
 #tablecustom th {
     padding-top: 12px;
     padding-bottom: 12px;
-    background-color: #4CAF50;
+    background-color: #4d4d4d;
     color: white;
 }
 .photouser {
@@ -255,4 +270,12 @@ ul#menu li a:hover {
 }
 .trude {
     background-color: red;
+}
+.glyphicon{
+  line-height: normal;
+}
+.contact {
+    color: blue;
+    font-weight: bold;
+    font-size: 150%;
 }

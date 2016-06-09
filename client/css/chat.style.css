@@ -4,7 +4,6 @@ body, html {
 }
 .box {}
 .clientVideo {
-    height: 200px;
     width:auto;
     display:inline-block;
     float:left;
@@ -13,6 +12,11 @@ body, html {
 -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
 box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
 }
+.photoURL{
+  float: left;
+  width:25px;
+  height: 25px;
+}
 .videoContainer {
     height: 200px;
     width:auto;
@@ -20,8 +24,9 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
 }
 .videoBorder{
   border:1px;
-  background:#38424b;
+  background:#f2f2f2;
   min-height: 200px;
+  margin:1px;video
 }
 .clear{
   clear:both;
@@ -39,17 +44,14 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
   height:200px;
 }
 .own{
-  border-style: solid;
-  border-color: black;
-  border-width: 1px;
 }
 .clientVideo .btn{
   margin-top:-200px;
-  width:25px;
-  height:25px;
-  top:170px;
-  left:160px;
-  position: relative;
+  padding: 0px;
+  width:50px;
+  height:50px;
+  position: absolute;;
+  overflow: visible;
 }
 .clientVideo .videoPauseBtn{
   background-image: url('icon/pause.png');
@@ -58,7 +60,7 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
 .clientVideo .muteBtn{
   margin-top:-25px;
   left:180px;
-  background-image: url('icon/mute.png');
+  background-image: url('../images/icon/mute.png');
   background-size:25px 25px;
 }
 .videoCanvas {
@@ -74,13 +76,24 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
     color: red;
     font-weight: bolder;
 }
-ul {
+.chatbox ul {
     list-style-type: none;
     margin: 2px;
     padding: 0px;
 }
+.chatbox li{
+  clear:both;
+  padding: 5px;
+}
+.chatbox li:hover{
+    background-color:#f2f2f2;
+}
+.chatbox li td{
+  clear:both;
+  padding: 5px 0 0 5px;
+  vertical-align: top;
+}
 input {
-    border-radius: 2px;
     border-style: solid;
     border-width: 1px;
     border-color: #a5cae4;
@@ -95,26 +108,39 @@ input:focus {
 }
 .username {
     font-weight: bold;
+    vertical-align: bottom;
 }
-.controls td {
+.controls>table>td {
     padding: 5px 10px 0 10px;
+}
+.controls tr {
+}
+.time{
+  font-style: bold;
+  color: #9e9ea6;
+  font-size: 0.75em;
+  vertical-align: bottom;
+}
+.message{
+   word-wrap: break-word;
+   word-break: break-all;;
 }
 .controls input {
     width: 100%;
     padding: 5px;
+    height: 30px;
 }
 .controls {
     outline-style: none;
     padding: 10px;
     width: 100%;
+
 }
 #chatbox {
-    height: 40vh;
     overflow: auto;
-    border: 1px solid #a5cae4;
-    background: #f0f7fc;
+    border: 1px solid #e9ebee;
+    background: white;
     padding: 5px;
-    border-radius: 2px;
 }
 .cncount {
     font-style: italic;

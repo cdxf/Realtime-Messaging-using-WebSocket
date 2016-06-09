@@ -1,17 +1,11 @@
-<div class="boderline">
-  <div class="headertable">List User Online</div>
-  <table align="center" id="tablecustom">
-  <tr>
-    <td>
-    <a href=""><img class="photouser" width="40" height="40" src="images/image.png"><span class="username"> Phuoc Tran</span></a>
-    <div>Junior at US</div>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href=""><img class="photouser" width="40" height="40" src="images/image.png"><span class="username"> Huynh Quang</span></a>
-      <div>Junior at US</div>
-    </td>
-  </tr>
- </table>
+<div class="borderline">
+    <div class="headertable">List User Online</div>
+    <table align="center" id="tablecustom">
+        <tr ng-repeat="user in users">
+            <td>
+                <a href=""><img class="photouser" width="40" height="40" ng-src="{{user.user.photoURL}}"><span class="username">{{user.user.displayName}}</span></a>
+                <div>Junior at US</div>
+            </td>
+        </tr>
+    </table>
 </div>

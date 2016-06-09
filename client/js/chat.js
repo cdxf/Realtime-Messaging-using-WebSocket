@@ -1,39 +1,6 @@
-angular.module('app', ['ui.router'])
-.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise('');
-    $stateProvider
-        .state('index', {
-            url: '',
-            templateUrl: 'template/index.html',
-            controller: 'myCtrl'
-        })
-        .state('room', {
-            url: '/room',
-            templateUrl: 'template/room.html',
-            controller: 'myCtrl'
-        })
-        .state('roomchat', {
-            url: '/roomchat/:id',
-            templateUrl: 'template/chat.html',
-            controller: ''
-        })
-        .state('contact', {
-            url: '/contact',
-            templateUrl: 'template/contact.html',
-            controller: ''
-        })
-        .state('chat', {
-            url: '/chat',
-            templateUrl: 'template/chat.html',
-            controller: ''
-        })
-        .state('user', {
-            url: '/user',
-            templateUrl: 'template/user.html',
-            controller: ''
-        });
-}])
-    .controller('MainCtrl', ['$scope', 'chatService', function($scope, chatService) {}])
+angular.module('app')
+    .controller('MainCtrl', ['$scope', 'chatService', function($scope, chatService) {
+    }])
     .directive('chat', ['$interval','$stateParams', 'fire','chatService', function($interval,$stateParams, fire,chatService) {
         return {
             restrict: 'E',
@@ -43,130 +10,133 @@ angular.module('app', ['ui.router'])
             templateUrl: 'template/chatDirective.html',
             link: function(scope, element, attrs) {
               scope.isLogged = fire.isLogged();
-              console.log("Linked");
-              fire.scope.$on('authChanged', function(e, data) {
+              scope.room = $stateParams.id;
+              scope.uid = 0;
+              scope.roomName = "";
+              chatService.getRoomName(scope.room,function(roomName){
+                scope.roomName = roomName;
+              });
+              var startedMedia = false;
+              if(scope.isLogged === true){
+                chatService.requestMediaRecord();
+                onMediaRecordAccept = chatService.scope.$on('mediaRecordAccept',function(){
+                  scope.accepted = true;
+                  scope.$apply();
+                  getBothMedia();
+                  camera(scope, element, chatService);
+                  audioRecord(scope, chatService);
+                  startedMedia = true;
+                });
+              }
+              onauthChanged =  fire.scope.$on('authChanged', function(e, data) {
                   scope.isLogged = fire.isLogged();
                   if (data !== undefined) {
                       scope.$apply();
+                      scope.uid = data.uid;
+                      scope.photoURL = data.photoURL;
+                      if(!startedMedia){
+                        chatService.requestMediaRecord();
+                        onMediaRecordAccept = chatService.scope.$on('mediaRecordAccept',function(){
+                          scope.accepted = true;
+                          scope.$apply();
+                          getBothMedia();
+                          camera(scope, element, chatService);
+                          audioRecord(scope, chatService);
+                        });
+                      }
+                  }
+                  else{
+                    recordStop();
                   }
                   if (scope.isLogged === true) scope.$apply();
               });
-                var room = $stateParams.id;
                 serviceEvent = chatService.scope;
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
-
                 var isSending = false;
-                scope.name = scope.message = "";
+                scope.message = "";
                 scope.sound = false;
                 scope.videosID = [];
                 var ontype = false;
                 var colors = [];
-                if (localStorage.getItem('hashID') === null) {
-                    localStorage.setItem('hashID', randomhash());
-                }
-                $interval(function() {
-                    if (ontype) return;
-                    if (localStorage.getItem('name') != scope.name) {
-                        if (localStorage.getItem('name') !== null)
-                            scope.name = localStorage.getItem('name');
-                    }
-                }, 1000);
                 scope.onSound = function() {
                     scope.sound = true;
                 };
                 scope.offSound = function() {
                     scope.sound = false;
                 };
-                scope.setName = function() {
-                    ontype = true;
-                    localStorage.setItem('name', scope.name);
-                };
-                scope.completeName = function() {
-                    ontype = false;
-                };
-                scope.startName = function() {
-                    ontype = true;
-                };
-                scope.numberGuest = -1;
-                if (localStorage.getItem('name') === null)
-                    scope.name = "#Guest";
-                scope.numberConnection = -1;
-                scope.$watch('numberConnection', function(a, b) {
-                    if (a != b) {
-                        scope.numberConnection = a;
-                    }
-                });
-                //var conn = io('http://localhost:8080');
-                //var conn = new WebSocket('wss://huynhquang.xyz/wss2/NNN');
-                //var conn = new WebSocket('ws://localhost:8080');
-                serviceEvent.$on('numberGuestChange', function(e, data) {
-                    scope.numberGuest = data.n;
-                    scope.$digest();
-                    if (data.type == 'closed') {
-                        addMessage("An user has left!");
-                    } else if (data.type == 'join') {
-                        addMessage("A user has joined!");
-                    }
-                });
-                serviceEvent.$on('guestLeave', function(e, data) {
-                    id = scope.videosID.indexOf(data.hashID);
-                    scope.videosID.splice(id, 1);
-                    scope.$digest();
-                });
-                serviceEvent.$on('numberConnection', function(e, data) {
-                    scope.numberConnection = data;
-                    scope.$digest();
-                });
                 var ended = false;
                 onMesssages = serviceEvent.$on('messages', function(e, data) {
                     html = $(".chatbox ul", element);
                     html.text("");
-                    console.log("Received");
                     messages = data.messages;
                     for(var roomID in messages){
-                      add(messages[roomID].name, messages[roomID].message, messages[roomID].time, messages[roomID].color, messages[roomID].image);
+                      add(messages[roomID]);
                     }
                     ended = true;
                 });
-                chatService.requestMessages(room);
+                chatService.requestMessages(scope.room);
+                chatService.requestMedia(scope.room);
                 onMesssage = serviceEvent.$on('message', function(e, data) {
-                    if(data.room != room) return;
+                    if(data.room != scope.room) return;
                     if (ended && scope.sound) {
                         $("#notifysound", element)[0].volume = 0.5;
                         $("#notifysound", element)[0].play();
                     }
-                    add(data.name, data.message, data.time, data.color, data.image);
+                    add(data);
                     scope.onSound();
+                });
+                onVideoStreamEnd = serviceEvent.$on('videoStreamEnd', function(e, uid) {
+                  console.log("stream end",uid);
+                  index =  scope.videosID.indexOf(uid);
+                  if (index != -1)
+                      scope.videosID.splice(index, 1);
+                      scope.$apply();
                 });
                 oldSource = null;
                 onAudioStream = serviceEvent.$on('audioStream', function(e, data) {
+                    if(audioCtx === undefined){
+                        audioCtx = new AudioContext();
+                    }
                     if (oldSource !== null) stopAudio(oldSource);
                     oldSource = startAudio(audioCtx, data.data, data.time, data.length, data.sampleRate);
                 });
                 onVideoStream = serviceEvent.$on('videoStream', function(e, data) {
-                    hashID = data.hash;
+                    console.log("received");
+                    uid = data.uid;
+                    room = data.room;
+                    photoURL = data.photoURL;
                     ratio = data.ratio;
                     videoHeight = 200;
-                    if (!scope.videosID.includes(data.hash)) {
-                        scope.videosID.push(data.hash);
+                    if(room != scope.room) return;
+                    if (!scope.videosID.includes(data.uid)) {
+                        scope.videosID.push(data.uid);
+                        scope.$apply();
                     }
                     blob = new Blob([data.data], {
                         type: 'video/webm'
                     });
                     ratio = data.ratio;
-                    capture = $("#video_" + hashID)[0];
-                    var canvas = $('#canvas_' + hashID)[0];
+                    capture = $("#video_" + uid)[0];
+                    var canvas = $('#canvas_' + uid)[0];
+                    var photo = $('#photo_' + uid)[0];
+                    photo.src = photoURL;
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(capture, 0, 0, ratio * videoHeight, videoHeight);
-                    capture.src = window.URL.createObjectURL(blob);
-                    capture.play();
+                    setTimeout(function(){
+                      capture.src = window.URL.createObjectURL(blob);
+                      capture.load();
+                      capture.play();
+                    },1);
+
+                    console.log("play");
+
                     if (canvas.height != videoHeight) {
                         canvas.width = capture.width = videoHeight * ratio;
                         canvas.height = capture.height = videoHeight;
                     }
-                    capture.addEventListener('play', function() {
-                        var $this = this; //cache;
-                    }, 0);
+                    // capture.addEventListener('play', function() {
+                    //     var $this = this; //cache;
+                    // }, 0);
                 });
                 scope.enter = function($event) {
                     if ($event.keyCode == 13) {
@@ -178,15 +148,19 @@ angular.module('app', ['ui.router'])
                     onMesssage();
                     onAudioStream();
                     onVideoStream();
+                    onauthChanged();
+                    onMediaRecordAccept();
+                    onVideoStreamEnd();
+                    chatService.closeMedia(scope.room);
+                    recordStop();
                 });
                 scope.send = function() {
                     scope.offSound();
                     if (isSending) return;
                     var imageInput = $("#picture", element);
                     var fileNumber = imageInput[0].files.length;
-                    if (scope.name === "" || (scope.message === "" && fileNumber === 0)) return;
+                    if ((scope.message === "" && fileNumber === 0)) return;
                     var time = Date.now();
-                    var name = escapeHtml(scope.name);
                     var image = "";
                     var completed = true;
                     isSending = true;
@@ -204,8 +178,7 @@ angular.module('app', ['ui.router'])
                     id = setInterval(function() {
                         if (completed) {
                             json = {
-                                name: name,
-                                room: room,
+                                room: scope.room,
                                 message: escapeHtml(scope.message),
                                 time: time,
                                 color: colors[name],
@@ -232,17 +205,26 @@ angular.module('app', ['ui.router'])
                     //html.html(html.html() + contents) ;
                     scrollToBottom();
                 };
-                add = function(name, message, time, color, image) {
+                add = function(data) {
+                  name = data.name;
+                  message = data.message;
+                  time = data.time;
+                  color = data.color;
+                  image = data.image;
+                  photoURL = data.photoURL;
                     _time = new Date();
                     _time.setTime(time);
                     timeString = _time.getHours() + ':' + _time.getMinutes();
                     var contents = `
                     <li>
-                    <span class="time">${timeString}</span>  -
-                    <span class="username" style="color:${color}">${name}</span>:
-                    <span class="message">
-                    ${message}
-                    </span>
+                    <table>
+                    <tr>
+                    <td><img class="photoURL" src="${photoURL}" alt="photoURL" /><td>
+                    <td>
+                    <span class="username" style="color:${color}">${name}</span> <span class="time">${timeString}</span>
+                    <div><span class="message">${message}</span>
+                    </div><td>
+                    </tr>
                     </li>
                     `;
                     html = $(".chatbox ul", element);
@@ -266,98 +248,23 @@ angular.module('app', ['ui.router'])
                 };
                 //Send camera here
                 //Handle Camera
-                console.log(camera);
-                camera(scope, element, chatService);
-                audioRecord(scope, chatService);
             }
         };
     }])
-    .service('chatService', function($interval, $rootScope) {
-        var scope = this.scope = $rootScope.$new(true);
-        var conn = io(SOCKET_URL);
-        this.user = "";
-        this.rooms = {};
-        //var conn = new WebSocket('wss://huynhquang.xyz/wss2/NNN');
-        //var conn = new WebSocket('ws://localhost:8080');
-        var ended = false;
-        conn.on('connect', function(data) {
-            console.log("Connection established!");
-            conn.emit('hashID', localStorage.getItem('hashID'));
-        });
-        conn.on('numberGuest', function(data) {
-            this.numberGuest = data;
-            scope.$emit('numberGuestChange', {
-                type: 'current',
-                'n': this.numberGuest
-            });
-        });
-        conn.on('numberConnection', function(data) {
-            this.numberConnection = data;
-            scope.$emit('numberConnection', data);
-        });
-        conn.on('closedClient', function(data) {
-            this.numberGuest--;
-            scope.$emit('numberGuestChange', {
-                type: 'closed',
-                'n': this.numberGuest
-            });
-            scope.$emit('guestLeave', {
-                'hashID': data.hashID
-            });
-        });
-        conn.on('newClient', function(data) {
-            this.numberGuest++;
-            scope.$emit('numberGuestChange', {
-                type: 'join',
-                'n': this.numberGuest
-            });
-        });
-        conn.on('messages', function(data) {
-            scope.$emit('messages', {
-                messages: data
-            });
-        });
-        conn.on('message', function(data) {
-            scope.$emit('message', data);
-        });
-        conn.on('videoStream', function(data) {
-            scope.$emit('videoStream', data);
-        });
-        conn.on('audioStream', function(data) {
-            scope.$emit('audioStream', data);
-        });
-        this.sendMessage = function(json) {
-            conn.emit("message", json);
-        };
-        this.sendVideoStream = function(json) {
-            conn.emit("videoStream", json);
-        };
-        this.sendAudioStream = function(json) {
-            conn.emit("audioStream", json);
-        };
-        this.login = function(data){
-          this.user = data;
-          conn.emit("login", data);
-        }
-        this.createRoom = function(data){
-          conn.emit("createRoom", data);
-        }
-        this.requestMessages = function(room){
-          conn.emit("requestMessages",room);
-        }
-        this.getRoom = function(onResult){
-          conn.emit("getRoom");
-          conn.on('getRoom', function(data) {
-              onResult(data);
-          });
-        }
-    });
-
+var gvideotrack;
+var gsoundtrack;
+function recordStop(){
+    if(gvideotrack !== undefined)
+    gvideotrack.stop();
+    if(gsoundtrack !== undefined)
+    gsoundtrack.stop();
+    }
 function audioRecord(scope, service) {
     var constraints = {
         audio: true
     };
     onStream = function(mediaStream){
+      gsoundtrack = mediaStream.getTracks()[0];
       window.AudioContext = window.AudioContext || window.webkitAudioContext;
       var audioCtx = new AudioContext();
       var chunk = [];
@@ -386,9 +293,9 @@ function audioRecord(scope, service) {
           }
           c++;
           if (c == n) {
-              var hash = localStorage.getItem('hashID');
               json = {
-                  'hash': hash,
+                  'uid': scope.uid,
+                  'room': scope.room,
                   'length': 8192 * n,
                   'data': buffer.buffer,
                   'time': audioCtx.currentTime,
@@ -420,8 +327,8 @@ function audioRecord(scope, service) {
     }
 
 }
-
 function camera(scope, element, service) {
+    console.log('start camera');
     cameraElem = $("#mycamera", element).get(0);
     cameraElem.volume = 0;
     var options = {
@@ -437,7 +344,9 @@ function camera(scope, element, service) {
         }
     };
     onStream = function(mediaStream) {
+        gvideotrack = mediaStream.getTracks()[0];
         scope.hasCamera = true;
+        scope.$apply();
         chunk = [];
         var mediaRecorder = new MediaRecorder(mediaStream, options);
         mediaRecorder.start();
@@ -448,17 +357,18 @@ function camera(scope, element, service) {
             var blob = new Blob(chunk, {
                 type: 'video/webm'
             });
-            //send blob overwork
-            var hash = localStorage.getItem('hashID');
             //blob to json
             var reader = new FileReader();
             reader.onloadend = function() {
                 arrayBuffer = this.result;
                 json = {
-                    hash: hash,
+                    room: scope.room,
+                    uid: scope.uid,
+                    photoURL: scope.photoURL,
                     data: arrayBuffer,
-                    ratio: camera.videoWidth / camera.videoHeight
+                    ratio: cameraElem.videoWidth / cameraElem.videoHeight
                 };
+                console.log("send");
                 service.sendVideoStream(json);
             };
             reader.readAsArrayBuffer(blob);
