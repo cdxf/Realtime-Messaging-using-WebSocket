@@ -77,6 +77,7 @@ io.on('connection', function(socket) {
     socket.on('getRoomName', function(room) {
         var getRoomName = function(snapshot) {
             roomData = snapshot.val();
+            if(roomData.title !== null)
             socket.emit("getRoomName", roomData.title);
         };
         rooms.child(room).once('value', getRoomName);
@@ -177,6 +178,10 @@ io.on('connection', function(socket) {
             });
         });
         io.emit('message', data);
+    });
+    socket.on('videoStreamEnd',function(){
+      if (socket.user !== undefined)
+      socket.broadcast.emit('videoStreamEnd', socket.user.uid);
     });
     socket.on('disconnect', function(data) {
         requestMedia.forEach(function(e, i, a) {

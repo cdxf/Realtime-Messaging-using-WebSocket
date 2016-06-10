@@ -20,7 +20,13 @@ body {
 a{
 }
 a:hover{
-  color:black;
+  font-weight:bold;
+}
+.archor{
+  color:inherit;
+}
+.archor:hover{
+  color:inherit !important;
 }
 .header, .navbar-inverse {
     background-color: #222;

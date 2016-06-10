@@ -16,12 +16,12 @@
       <div class="videoBorder" ng-show="(isLogged && accepted) || videosID.length !== 0">
         <div class="clientVideo own" ng-show="hasCamera">
           <video volume="0" class="videoContainer" height="200" width="200px" id="mycamera" autoplay="autoplay" style=""></video>
-          <img ng-src="{{photoURL}}" class="btn"></img>
+          <div class="btn btnClose" ng-click="offRecord()"></div>
 
           <!-- <div class="btn videoPauseBtn"></div>
           <div class="btn muteBtn"></div> -->
         </div>
-          <div class="clientVideo" ng-repeat="id in videosID">
+          <div class="clientVideo" ng-show="videosID.length" ng-repeat="id in videosID">
               <div class="videoContainer">
                   <canvas class="cameraCanvas" ng-attr-id="{{'canvas_'+id}}"></canvas>
                   <video class="videoCanvas"ng-attr-id="{{'video_'+id}}" style=""></video>
@@ -33,11 +33,12 @@
     </td>
     </tr>
     <tr ng-show="isLogged">
-        <td width="76%">
+        <td width="90%">
             <input type="text" class="messageInput" ng-model="message" placeholder="Enter your message..." />
         </td>
-        <td width="20%">
-            <input type="file" value="" ng-model="image" name="pic" id="picture" accept="image/*">
+        <td width="5%">
+          <label for="picture" class="uploadImage"> <span class="">Image</span></label>
+            <input type="file" value="" ng-model="image" name="pic" id="picture" accept="image/*" style="width:0px;visibility: hidden; position: absolute;">
         </td>
         <td width="5%">
             <input type="submit" ng-click="send()" value=">" />

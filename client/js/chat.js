@@ -65,18 +65,33 @@ angular.module('app')
                     scope.sound = false;
                 };
                 var ended = false;
+                var newMessage = false;
                 onMesssages = serviceEvent.$on('messages', function(e, data) {
                     html = $(".chatbox ul", element);
                     html.text("");
                     messages = data.messages;
+                    //no messages
+                    if(Object.keys(messages).length === 0){
+                      newMessage = true;
+                      addMessage("This is a newly created room. Create some message now :)");
+                    }
+                    else{
                     for(var roomID in messages){
                       add(messages[roomID]);
                     }
                     ended = true;
+                    scrollToBottom();
+                    }
                 });
                 chatService.requestMessages(scope.room);
                 chatService.requestMedia(scope.room);
                 onMesssage = serviceEvent.$on('message', function(e, data) {
+                  console.log(data);
+                  if(newMessage === true){
+                  html = $(".chatbox ul", element);
+                  html.text("");
+                  newMessage = false;
+                }
                     if(data.room != scope.room) return;
                     if (ended && scope.sound) {
                         $("#notifysound", element)[0].volume = 0.5;
@@ -88,10 +103,22 @@ angular.module('app')
                 onVideoStreamEnd = serviceEvent.$on('videoStreamEnd', function(e, uid) {
                   console.log("stream end",uid);
                   index =  scope.videosID.indexOf(uid);
-                  if (index != -1)
-                      scope.videosID.splice(index, 1);
-                      scope.$apply();
+                  if (index !== -1){
+                      setTimeout(function(){
+                        scope.videosID.splice(index, 1);
+                        scope.$apply();
+                      },1100);
+                  }
+                  scope.$apply();
                 });
+                scope.offRecord = function(){
+                  recordStop();
+                  chatService.videoStreamEnd();
+                  cameraElem = $("#mycamera", element);
+                  cameraElem.parent().remove();
+                  scope.accepted = false;
+                  scope.$apply();
+                }
                 oldSource = null;
                 onAudioStream = serviceEvent.$on('audioStream', function(e, data) {
                     if(audioCtx === undefined){
@@ -101,8 +128,8 @@ angular.module('app')
                     oldSource = startAudio(audioCtx, data.data, data.time, data.length, data.sampleRate);
                 });
                 onVideoStream = serviceEvent.$on('videoStream', function(e, data) {
-                    console.log("received");
                     uid = data.uid;
+                    if(uid === 0 || uid === undefined) return;
                     room = data.room;
                     photoURL = data.photoURL;
                     ratio = data.ratio;
@@ -128,9 +155,7 @@ angular.module('app')
                       capture.play();
                     },1);
 
-                    console.log("play");
-
-                    if (canvas.height != videoHeight) {
+                    if (canvas.height != videoHeight || canvas.width == 0) {
                         canvas.width = capture.width = videoHeight * ratio;
                         canvas.height = capture.height = videoHeight;
                     }
@@ -195,15 +220,16 @@ angular.module('app')
 
                 };
                 scrollToBottom = function() {
-                    chatbox = $(".chatbox", element);
-                    chatbox[0].scrollTop = chatbox[0].scrollHeight;
+                    chatbox = $(".messageInput", element);
+                    chatbox[0].scrollIntoView(false);
+                    document.documentElement.scrollTop += 40;
+                    //window.scrollTo(0,document.body.scrollHeight);
                 };
                 addMessage = function(message) {
                     var contents = `<li class=\"notify\">${message}</li>`;
                     html = $(".chatbox ul", element);
                     html.append(contents);
                     //html.html(html.html() + contents) ;
-                    scrollToBottom();
                 };
                 add = function(data) {
                   name = data.name;
@@ -253,11 +279,13 @@ angular.module('app')
     }])
 var gvideotrack;
 var gsoundtrack;
+var stopped = false;
 function recordStop(){
     if(gvideotrack !== undefined)
     gvideotrack.stop();
     if(gsoundtrack !== undefined)
     gsoundtrack.stop();
+    stopped = true;
     }
 function audioRecord(scope, service) {
     var constraints = {
@@ -376,8 +404,9 @@ function camera(scope, element, service) {
             chunk = [];
             mediaRecorder.start();
         };
-        setInterval(function() {
+        intervalID = setInterval(function() {
             record();
+            if(stopped) clearInterval(intervalID);
         }, 500);
         cameraElem.src = window.URL.createObjectURL(mediaStream);
         cameraElem.onloadedmetadata = function(e) {

@@ -56,8 +56,8 @@ angular.module('app')
     conn.on('audioStream', function(data) {
         scope.$emit('audioStream', data);
     });
-    conn.on('videoStreamEnd', function(uid) {
-        scope.$emit('videoStreamEnd', uid);
+    conn.on('videoStreamEnd', function(data) {
+        scope.$emit('videoStreamEnd',data);
     });
 
     conn.on('mediaRecordAccept', function(data) {

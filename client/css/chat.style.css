@@ -14,8 +14,8 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
 }
 .photoURL{
   float: left;
-  width:25px;
-  height: 25px;
+  width:40px;
+  height: 40px;
 }
 .videoContainer {
     height: 200px;
@@ -53,9 +53,17 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
   position: absolute;;
   overflow: visible;
 }
+.clientVideo .btnClose{
+  margin-top:-200px;
+    background-image: url('../images/close.png');
+    width:20px;
+    width:20px;
+  background-size:20px 20px;
+  background-repeat: no-repeat;
+}
 .clientVideo .videoPauseBtn{
   background-image: url('icon/pause.png');
-  background-size:25px 25px;
+  background-size:10px 10px;
 }
 .clientVideo .muteBtn{
   margin-top:-25px;
@@ -73,7 +81,7 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
     filter: FlipH;
 }
 .notify {
-    color: red;
+    color: #4CAF50;
     font-weight: bolder;
 }
 .chatbox ul {
@@ -93,11 +101,26 @@ box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.75);
   padding: 5px 0 0 5px;
   vertical-align: top;
 }
-input {
+input, .uploadImage {
     border-style: solid;
     border-width: 1px;
     border-color: #a5cae4;
     padding: 3px;
+}
+.uploadImage {
+  display: table;
+  padding: auto;
+  margin: auto;
+  text-align: center;
+  width: 100%;
+  height: 30px;
+}
+.uploadImage>span{
+display: table-cell;
+padding-top:5px;
+}
+.uploadImage:hover{
+background-color: #f2f2f2;
 }
 input:focus {
     background: #f0f7fc;
@@ -122,8 +145,9 @@ input:focus {
   vertical-align: bottom;
 }
 .message{
+  font-family: 'Lato' !important;
    word-wrap: break-word;
-   word-break: break-all;;
+   word-break: break-word;
 }
 .controls input {
     width: 100%;
