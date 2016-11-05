@@ -3,6 +3,8 @@
  1. Realtime Chatting
  2. Facebook login
  3. Support Video/Audio (50%).
+ 4. Image upload
+ 5. Youtube
  
  **Screenshot:**
  
